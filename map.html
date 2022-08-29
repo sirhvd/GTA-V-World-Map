@@ -102,21 +102,21 @@
         //     name: "Roadmap",
         // });
     
-        let atlas = new google.maps.ImageMapType({
-            getTileUrl: function (coord, zoom) {
-                let normalizedCoord = getNormalizedCoord(coord, zoom);
-                if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
-                    return "Atlas/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
-                } else {
-                    return "Atlas/empty.jpg";
-                }
-            },
-            tileSize: new google.maps.Size(256, 256),
-            maxZoom: 7,
-            minZoom: 2,
-            zoom: 2,
-            name: "Atlas",
-        });
+        // let atlas = new google.maps.ImageMapType({
+        //     getTileUrl: function (coord, zoom) {
+        //         let normalizedCoord = getNormalizedCoord(coord, zoom);
+        //         if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
+        //             return "Atlas/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
+        //         } else {
+        //             return "Atlas/empty.jpg";
+        //         }
+        //     },
+        //     tileSize: new google.maps.Size(256, 256),
+        //     maxZoom: 7,
+        //     minZoom: 2,
+        //     zoom: 2,
+        //     name: "Atlas",
+        // });
     
         // Basic options for our map
         let myOptions = {
@@ -127,7 +127,7 @@
             mapTypeControl: true,
             mapTypeControlOptions: {
                 // mapTypeIds: ["gta_satellite", "gta_roadmap", "gta_atlas"],
-                mapTypeIds: ["gta_satellite", "gta_atlas"],
+                mapTypeIds: ["gta_satellite"],
             },
         };
     
@@ -135,7 +135,7 @@
         map = new google.maps.Map(document.getElementById("map"), myOptions);
         map.mapTypes.set("gta_satellite", satellite);
         // map.mapTypes.set("gta_roadmap", roadmap);
-        map.mapTypes.set("gta_atlas", atlas);
+        // map.mapTypes.set("gta_atlas", atlas);
         map.setMapTypeId("gta_satellite"); // sets default 'startup' map
     
         let overlay = new google.maps.OverlayView();
