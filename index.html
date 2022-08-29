@@ -1,0 +1,245 @@
+<!-- @format -->
+<style>
+    body,
+    html {
+    padding: 0px;
+    margin: 0px;
+    background: url(bg.jpg) 50% 50% / cover no-repeat fixed rgb(0, 0, 0);
+    }
+    #map {
+    width: 1126.69px;
+    height: 600px;
+    color: #000;
+    background: #efefef;
+    margin: 0 auto;
+    }
+    span.loading {
+    display: block;
+    text-align: center;
+    font: 300 italic 72px/400px "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", sans-serif;
+    }
+    .sweetfx {
+    margin: 10px;
+    padding: 0px 20px 0px 20px;
+    background-color: rgba(0, 0, 0, 0.5);
+    text-align: center;
+    }
+    .sweetxt {
+    color: #fff;
+    font-size: 13px;
+    }
+    .sweetxt a {
+    color: #fff;
+    font-style: italic;
+    }
+ </style>
+ <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDdVKht18Tjwg-x2sGbO9sFXnnghJk2Kms"></script>
+ <div id="category_1" class="category_block block_wrap">
+    <div class="border">
+       <div class="sweetfx sweetxt">
+          <div align="center"><img src="logo.png" /></div>
+          All maps rendered in 20K res using
+          <a href="https://github.com/bramus/photoshop-google-maps-tile-cutter/">photoshop-google-maps-tile-cutter</a>
+          Please don't re-publish as is. However you can share, modify and use this any way you want! Give credits if you feel like it :P Altho not required to!
+          <br />
+          <div align="center">
+             <img src="red-dot.png" />
+             <input onclick="clearMarkers();" type="button" value="Hide Markers" />
+             <input onclick="showMarkers();" type="button" value="Show All Markers" />
+             <input onclick="addMarkerPrompt();" type="button" value="Add marker" />
+             <img src="yellow-dot.png" /><br />
+             <br />
+          </div>
+       </div>
+       <div class="sweetfx">
+          <div id="map"><span class="loading">loading tiles...</span></div>
+          <div align="center" class="sweetxt">
+             Map by: Zslash aka Martin Floden -
+             <a href="http://www.lifeinsanandreas.com" target="new">LifeinSanAndreas.com</a>
+             - <a href="http://www.martinfloden.no" target="new">MartinFloden.no</a>
+          </div>
+       </div>
+    </div>
+ </div>
+ <script>
+    let map;
+    let static_markers = [];
+    let repeatOnXAxis = false; // Do we need to repeat the image on the X-axis? Most likely you'll want to set this to false
+    
+    let clearMarkers, showMarkers, addMarkerPrompt;
+    
+    document.addEventListener("DOMContentLoaded", function (event) {
+        // Define our custom map type
+        let satellite = new google.maps.ImageMapType({
+            getTileUrl: function (coord, zoom) {
+                let normalizedCoord = getNormalizedCoord(coord, zoom);
+                if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
+                    return "Satellite/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
+                } else {
+                    return "Satellite/empty.jpg";
+                }
+            },
+            tileSize: new google.maps.Size(256, 256),
+            maxZoom: 7,
+            minZoom: 2,
+            zoom: 2,
+            name: "Satellite",
+        });
+    
+        let roadmap = new google.maps.ImageMapType({
+            getTileUrl: function (coord, zoom) {
+                let normalizedCoord = getNormalizedCoord(coord, zoom);
+                if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
+                    return "Roadmap/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
+                } else {
+                    return "Roadmap/empty.jpg";
+                }
+            },
+            tileSize: new google.maps.Size(256, 256),
+            maxZoom: 7,
+            minZoom: 2,
+            zoom: 2,
+            name: "Roadmap",
+        });
+    
+        let atlas = new google.maps.ImageMapType({
+            getTileUrl: function (coord, zoom) {
+                let normalizedCoord = getNormalizedCoord(coord, zoom);
+                if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
+                    return "Atlas/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
+                } else {
+                    return "Atlas/empty.jpg";
+                }
+            },
+            tileSize: new google.maps.Size(256, 256),
+            maxZoom: 7,
+            minZoom: 2,
+            zoom: 2,
+            name: "Atlas",
+        });
+    
+        // Basic options for our map
+        let myOptions = {
+            center: new google.maps.LatLng(0, 0),
+            zoom: 2,
+            minZoom: 0,
+            streetViewControl: false,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                mapTypeIds: ["gta_satellite", "gta_roadmap", "gta_atlas"],
+            },
+        };
+    
+        // Init the map and hook our custom map type to it
+        map = new google.maps.Map(document.getElementById("map"), myOptions);
+        map.mapTypes.set("gta_satellite", satellite);
+        map.mapTypes.set("gta_roadmap", roadmap);
+        map.mapTypes.set("gta_atlas", atlas);
+        map.setMapTypeId("gta_satellite"); // sets default 'startup' map
+    
+        let overlay = new google.maps.OverlayView();
+        overlay.draw = function () {};
+        overlay.setMap(map);
+    
+        function getNormalizedCoord(coord, zoom) {
+            if (!repeatOnXAxis) return coord;
+            let y = coord.y;
+            let x = coord.x;
+    
+            let tileRange = 1 << zoom;
+    
+            if (y < 0 || y >= tileRange) {
+                return null;
+            }
+    
+            if (x < 0 || x >= tileRange) {
+                x = ((x % tileRange) + tileRange) % tileRange;
+            }
+            return { x: x, y: y };
+        }
+    
+        function setAllMap(map) {
+            for (let i = 0; i < static_markers.length; i++) {
+                static_markers[i].setMap(map);
+            }
+        }
+    
+        clearMarkers = function() {
+            setAllMap(null);
+        }
+
+        showMarkers = function() {
+            setAllMap(map);
+        }
+    
+        addMarkerPrompt = function() {
+          let promptInput = prompt("Enter coords (x, y)", "");
+          if (promptInput != null) {
+              const coords = promptInput.split(",");
+              if (coords[0] && coords[1]) {
+                  addMarker(Number(coords[0]), Number(coords[1]), "static", "Location", "yellow-dot", true);
+              }
+          }
+        }
+    
+        function gtamp2googlepx(x, y) {
+            let mx = 0.0503;
+            let my = -0.0503;
+    
+            x = mx * x;
+            y = my * y;
+    
+            x = x - 486.97;
+            y = y + 408.9;
+    
+            return (pixelLatLng = overlay.getProjection().fromContainerPixelToLatLng(new google.maps.Point(x, y)));
+        }
+    
+        function addMarker(x, y, type, content_html, icon, ig) {
+    
+            map.setZoom(2);
+    
+            map.setCenter({lat:0, lng:0});
+
+            setTimeout(() => {
+                let location = null;
+                if (ig) {
+                    location = gtamp2googlepx(x, y);
+                } else {
+                    location = new google.maps.LatLng(x, y);
+                }
+        
+                let marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    icon: icon + ".png",
+                    optimized: false,
+                });
+        
+                if (type == "static") {
+                    static_markers.push(marker);
+                }
+        
+                let infowindow = new google.maps.InfoWindow({
+                    content: content_html + "<br><br></b>LatLong: " + location,
+                });
+        
+                google.maps.event.addListener(marker, "click", function () {
+                    infowindow.open(map, marker);
+                    google.maps.event.addListener(map, "click", function () {
+                        infowindow.close();
+                    });
+                });
+
+            }, 500);
+    
+        }
+    
+      //   google.maps.event.addListenerOnce(map, "idle", function () {
+      //       setTimeout(function() {
+      //         addMarker(-1512.62, 1517.16, "static", "House", "yellow-dot", true);
+      //       }, 500);
+      //   });
+    
+    });
+ </script>
