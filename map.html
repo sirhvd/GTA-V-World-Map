@@ -86,21 +86,21 @@
             name: "Satellite",
         });
     
-        let roadmap = new google.maps.ImageMapType({
-            getTileUrl: function (coord, zoom) {
-                let normalizedCoord = getNormalizedCoord(coord, zoom);
-                if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
-                    return "Roadmap/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
-                } else {
-                    return "Roadmap/empty.jpg";
-                }
-            },
-            tileSize: new google.maps.Size(256, 256),
-            maxZoom: 7,
-            minZoom: 2,
-            zoom: 2,
-            name: "Roadmap",
-        });
+        // let roadmap = new google.maps.ImageMapType({
+        //     getTileUrl: function (coord, zoom) {
+        //         let normalizedCoord = getNormalizedCoord(coord, zoom);
+        //         if (normalizedCoord && normalizedCoord.x < Math.pow(2, zoom) && normalizedCoord.x > -1 && normalizedCoord.y < Math.pow(2, zoom) && normalizedCoord.y > -1) {
+        //             return "Roadmap/" + zoom + "_" + normalizedCoord.x + "_" + normalizedCoord.y + ".jpg";
+        //         } else {
+        //             return "Roadmap/empty.jpg";
+        //         }
+        //     },
+        //     tileSize: new google.maps.Size(256, 256),
+        //     maxZoom: 7,
+        //     minZoom: 2,
+        //     zoom: 2,
+        //     name: "Roadmap",
+        // });
     
         let atlas = new google.maps.ImageMapType({
             getTileUrl: function (coord, zoom) {
@@ -126,14 +126,15 @@
             streetViewControl: false,
             mapTypeControl: true,
             mapTypeControlOptions: {
-                mapTypeIds: ["gta_satellite", "gta_roadmap", "gta_atlas"],
+                // mapTypeIds: ["gta_satellite", "gta_roadmap", "gta_atlas"],
+                mapTypeIds: ["gta_satellite", "gta_atlas"],
             },
         };
     
         // Init the map and hook our custom map type to it
         map = new google.maps.Map(document.getElementById("map"), myOptions);
         map.mapTypes.set("gta_satellite", satellite);
-        map.mapTypes.set("gta_roadmap", roadmap);
+        // map.mapTypes.set("gta_roadmap", roadmap);
         map.mapTypes.set("gta_atlas", atlas);
         map.setMapTypeId("gta_satellite"); // sets default 'startup' map
     
